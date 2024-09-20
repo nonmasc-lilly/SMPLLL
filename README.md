@@ -30,13 +30,13 @@ BNF for Syntax Specifications: ABNF* found at:
 An example of the form described in Section 1.0 is displayed below:
 
 ```ABNF
-ws = 1*(%x20 | %x9)
-nl = 1*(%xA  | %xD)
-integer = *DIGIT | '$' *HEXDIG
+ws = 1*(%x20 / %x9)
+nl = 1*(%xA  / %xD)
+integer = *DIGIT / '$' *HEXDIG
 identifier = ALPHA *(ALPHA / DIGIT)
-program = *([include | byte_list | invoke_macro | define_macro
-    | remark] nl)
-define_macro = define_byte_list_macro | define_invoker_macro |
+program = *([include / byte_list | invoke_macro | define_macro
+    / remark] nl)
+define_macro = define_byte_list_macro / define_invoker_macro |
     define_argument_macro
 ```
 
@@ -48,8 +48,8 @@ contents of the file which its argument refers to (within it's
 quotes). The syntax for both of these follows:
 
 ```ABNF
-include = 'i' [ws] '"' 1*(VCHAR | ws) '"'
-remark  = 'r' [ws] '"'  *(VCHAR | ws) '"'
+include = 'i' [ws] '"' 1*(VCHAR / ws) '"'
+remark  = 'r' [ws] '"'  *(VCHAR / ws) '"'
 ```
 
 ### 3.0 Byte Lists
@@ -63,7 +63,7 @@ at the place of embed.
 The syntax for embedding a byte list is as follows:
 
 ```ABNF
-byte_list = '<' [ws] integer [ws] *(',' [ws] integer [ws]) '>'
+byte_list = '<' [ws] integer [ws] *(',' [ws / nl] integer [ws]) '>'
 ```
 
 ### 4.0 Macros
@@ -86,7 +86,7 @@ but instead refer to some string value. The syntax is as follows:
 
 ```ABNF
 define_argument_macro = '%' [ws] identifier [ws]
-    '"' *(VCHAR | ws) '"'
+    '"' *(VCHAR / ws) '"'
 ```
 
 ### 4.2 Byte List Macros
@@ -96,7 +96,7 @@ produces a byte list based on said arguments. The syntax follows:
 
 ```ABNF
 define_byte_list_macro = '#' [ws] identifier ws integer [ws] '<'
-    argument_expression [ws] *(',' [ws | nl] argument_expression
+    argument_expression [ws] *(',' [ws / nl] argument_expression
     [ws]) '>'
 ```
 
@@ -148,7 +148,7 @@ condition = '?' [ws] condition_expression [ws] '->' [ws]
     argument_expression [ws] ':' [ws] argument_expression
 condition_expression = ('=' / '>' / '!=') [ws] argument_expression
     [ws] ',' [ws] argument_expression / ('&' / '/') [ws]
-    condition_expression condition_expression
+    condition_expression [ws] ',' [ws] condition_expression
 ```
 
 An example would be a macro which checks if its first argument is
@@ -172,8 +172,8 @@ operations:
 And they have the following syntax:
 
 ```
-arithmetic = ('+' / '-' / '*' / '%') [ws] argument_expression [ws]
-    ',' [ws] argument_expression
+arithmetic = ('+' / '-' / '*' / '//' / '/%') [ws]
+    argument_expression [ws] ',' [ws] argument_expression
 ```
 
 ### 4.5 Invokation
@@ -185,9 +185,54 @@ as follows:
 
 ```ABNF
 invoke_macro = 'm' ws identifier [ws] [(integer / identifier) [ws]
-    *(',' [ws] (integer / identifier) [ws])]
+    *(',' [ws / nl] (integer / identifier) [ws])]
 invoke_macro_wargexpr = '.' [ws] identifer [ws] [
-    argument_expression [ws] *(',' [ws] argument_expression [ws])]
+    argument_expression [ws] *(',' [ws / nl] argument_expression
+    [ws])]
 ```
 
 # 5 Full Syntax
+
+```ABNF
+; basic lexical tokens
+ws = 1*(%x20 / %x9)
+nl = 1*(%xA  / %xD)
+; primitives
+integer = *DIGIT / '$' *HEXDIG
+identifier = ALPHA *(ALPHA / DIGIT)
+argument = '@' integer
+; program definition
+program = *([include / byte_list | invoke_macro | define_macro |
+    remark] nl)
+; preprocessor
+include = 'i' [ws] '"' 1*(VCHAR / ws) '"'
+remark  = 'r' [ws] '"'  *(VCHAR / ws) '"'
+; basic expressions
+byte_list = '<' [ws] integer [ws] *(',' [ws / nl] integer [ws]) '>'
+invoke_macro = 'm' ws identifier [ws] [(integer / identifier) [ws]
+    *(',' [ws] (integer / identifier) [ws])]
+; macros
+define_macro = define_byte_list / define_invoker_macro |
+    define_argument_macro
+define_argument_macro = '%' [ws] identifier [ws]
+    '"' *(VCHAR / ws) '"'
+define_byte_list = '#' [ws] identifier ws integer [ws] '<'
+    argument_expression [ws] *(',' [ws / nl] argument_expression
+    [ws]) '>'
+define_invoker_macro = ']' [ws] identifier ws integer [ws] '{'
+        [nl] *(invoker_macro_wargexpr nl)
+    '}'
+invoke_macro_wargexpr = '.' [ws] identifier [ws] [
+    argument_expression [ws] *(',' [ws / nl] argument_expression
+    [ws])]
+; argument_expression
+argument_expression = integer / identifier / argument / condition /
+    arithmetic
+condition = '?' [ws] condition_expression [ws] '->' [ws]
+    argument_expression [ws] ':' [ws] argument_expression
+condition_expression = ('=' / '>' / '!=') [ws] argument_expression
+    [ws] ',' [ws] argument_expression / ('&' / '/') [ws]
+    condition_expression [ws] ',' [ws] condition_expression
+arithmetic = ('+' / '-' / '*' / '//' / '/%') argument_expression
+    [ws] ',' [ws] argument_expression
+```
