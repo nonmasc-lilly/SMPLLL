@@ -63,7 +63,7 @@ at the place of embed.
 The syntax for embedding a byte list is as follows:
 
 ```ABNF
-byte_list = '<' [ws] integer [ws] *(',' [ws / nl] integer [ws]) '>'
+byte_list = '<' [ws] integer [ws] *(',' [ws] [nl] [ws] integer [ws]) '>'
 ```
 
 ### 4.0 Macros
@@ -96,7 +96,7 @@ produces a byte list based on said arguments. The syntax follows:
 
 ```ABNF
 define_byte_list_macro = '#' [ws] identifier ws integer [ws] '<'
-    argument_expression [ws] *(',' [ws / nl] argument_expression
+    argument_expression [ws] *(',' [ws] [nl] [ws] argument_expression
     [ws]) '>'
 ```
 
@@ -109,7 +109,7 @@ follows:
 
 ```ABNF
 define_invoker_macro = ']' [ws] identifier ws integer [ws] '{'
-        [nl] *(invoke_macro_wargexpr nl)
+        [nl] *([ws] invoke_macro_wargexpr nl)
     '}'
 ```
 
@@ -185,9 +185,9 @@ as follows:
 
 ```ABNF
 invoke_macro = 'm' ws identifier [ws] [(integer / identifier) [ws]
-    *(',' [ws / nl] (integer / identifier) [ws])]
+    *(',' [ws] [nl] [ws] (integer / identifier) [ws])]
 invoke_macro_wargexpr = '.' [ws] identifer [ws] [
-    argument_expression [ws] *(',' [ws / nl] argument_expression
+    argument_expression [ws] *(',' [ws] [nl] [ws] argument_expression
     [ws])]
 ```
 
@@ -208,7 +208,7 @@ program = *([include / byte_list / invoke_macro / define_macro /
 include = 'i' [ws] '"' 1*(VCHAR / ws) '"'
 remark  = 'r' [ws] '"'  *(VCHAR / ws) '"'
 ; basic expressions
-byte_list = '<' [ws] integer [ws] *(',' [ws / nl] integer [ws]) '>'
+byte_list = '<' [ws] integer [ws] *(',' [ws] [nl] [ws] integer [ws]) '>'
 invoke_macro = 'm' ws identifier [ws] [(integer / identifier) [ws]
     *(',' [ws] (integer / identifier) [ws])]
 ; macros
@@ -217,13 +217,13 @@ define_macro = define_byte_list / define_invoker_macro /
 define_argument_macro = '%' [ws] identifier [ws]
     '"' *(VCHAR / ws) '"'
 define_byte_list = '#' [ws] identifier ws integer [ws] '<'
-    argument_expression [ws] *(',' [ws / nl] argument_expression
+    argument_expression [ws] *(',' [ws] [nl] [ws] argument_expression
     [ws]) '>'
 define_invoker_macro = ']' [ws] identifier ws integer [ws] '{'
-        [nl] *(invoker_macro_wargexpr nl)
+        [nl] *([ws] invoker_macro_wargexpr nl)
     '}'
 invoke_macro_wargexpr = '.' [ws] identifier [ws] [
-    argument_expression [ws] *(',' [ws / nl] argument_expression
+    argument_expression [ws] *(',' [ws] [nl] [ws] argument_expression
     [ws])]
 ; argument_expression
 argument_expression = integer / identifier / argument / condition /
