@@ -34,9 +34,9 @@ ws = 1*(%x20 / %x9)
 nl = 1*(%xA  / %xD)
 integer = *DIGIT / '$' *HEXDIG
 identifier = ALPHA *(ALPHA / DIGIT)
-program = *([include / byte_list | invoke_macro | define_macro
+program = *([include / byte_list / invoke_macro / define_macro
     / remark] nl)
-define_macro = define_byte_list_macro / define_invoker_macro |
+define_macro = define_byte_list_macro / define_invoker_macro /
     define_argument_macro
 ```
 
@@ -202,7 +202,7 @@ integer = *DIGIT / '$' *HEXDIG
 identifier = ALPHA *(ALPHA / DIGIT)
 argument = '@' integer
 ; program definition
-program = *([include / byte_list | invoke_macro | define_macro |
+program = *([include / byte_list / invoke_macro / define_macro /
     remark] nl)
 ; preprocessor
 include = 'i' [ws] '"' 1*(VCHAR / ws) '"'
@@ -212,7 +212,7 @@ byte_list = '<' [ws] integer [ws] *(',' [ws / nl] integer [ws]) '>'
 invoke_macro = 'm' ws identifier [ws] [(integer / identifier) [ws]
     *(',' [ws] (integer / identifier) [ws])]
 ; macros
-define_macro = define_byte_list / define_invoker_macro |
+define_macro = define_byte_list / define_invoker_macro /
     define_argument_macro
 define_argument_macro = '%' [ws] identifier [ws]
     '"' *(VCHAR / ws) '"'
